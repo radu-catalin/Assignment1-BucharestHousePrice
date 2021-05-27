@@ -12,16 +12,16 @@ import torchvision.transforms as transforms
 
 
 # device config
-device = torch.device('cpu')
-# device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+# device = torch.device('cpu')
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # hyperparams
 input_size = 6
-hidden_size = 10
+hidden_size = 500
 output_size = 1
-num_epochs = 10
-batch_size = 5
-learning_rate = 0.01
+num_epochs = 20
+batch_size = 1
+learning_rate = 0.001
 momentum = 0.9
 log_interval = int(1000 / batch_size)
 
@@ -96,7 +96,7 @@ class NeuralNetwork(nn.Module):
         )
 
     def forward(self, x):
-        x = self.linear1(x)
+        x = F.relu(self.linear1(x))
         x = self.linear2(x)
         return x
 
@@ -116,7 +116,6 @@ losses_train = []
 for epoch in range(num_epochs):
     for i, (data, labels) in enumerate(train_loader):
         data = data.to(device).float()
-        # print(data)
         labels = labels.to(device).view(-1, 1).float()
 
         outputs = model(data)
@@ -138,6 +137,7 @@ for epoch in range(num_epochs):
 
 print('Finished training!')
 
+losses_validation = []
 with torch.no_grad():
     n_correct = 0
     n_samples = 0
@@ -148,9 +148,15 @@ with torch.no_grad():
 
         outputs = model(data)
 
+        loss = criterion(outputs, labels)
+        losses_validation.append(loss)
+
         n_samples += labels.size(0)
         n_correct += (outputs.int() + 1 == labels).sum().item()
     acc = 100.0 * n_correct / n_samples
     print(f'Accuracy of the network: {acc}%')
-plot_loss(losses_train, label='loss')
+
+plot_loss(losses_train, label='regression_loss')
+plt.show()
+plot_loss(losses_validation, label='regression_validation_loss')
 plt.show()
